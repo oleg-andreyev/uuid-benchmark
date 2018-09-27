@@ -1,0 +1,20 @@
+{
+    "require": {
+        "ramsey/uuid": "^3.8",
+        "fzaninotto/faker": "^1.8",
+        "doctrine/dbal": "^2.8",
+        "doctrine/collections": "^1.5",
+        "symfony/debug": "^4.1"
+    },
+    "autoload": {
+        "files": [
+            "Benchmark.php",
+            "BinaryUuid.php",
+            "FileResult.php",
+            "InlineResult.php",
+            "NormalId.php",
+            "OptimisedUuid.php",
+            "TextualUuid.php"
+        ]
+    }
+}
