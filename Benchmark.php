@@ -1,5 +1,6 @@
 <?php
 
+use Doctrine\DBAL\Statement;
 use Faker\Factory;
 use Doctrine\DBAL\Driver\Connection;
 use Doctrine\DBAL\Logging\DebugStack;
@@ -52,13 +53,19 @@ abstract class Benchmark
 
     abstract public function run(): InlineResult;
 
+    /**
+     * Run query benchmark
+     *
+     * @param Statement[] $queries
+     * @return InlineResult
+     */
     protected function runQueryBenchmark(array $queries): InlineResult
     {
         $stack = new DebugStack();
         $this->connection->getConfiguration()->setSQLLogger($stack);
 
         foreach ($queries as $query) {
-            $this->connection->fetchAll($query);
+            $query->execute();
         }
 
         $this->result = [];

@@ -56,6 +56,8 @@ function runIteration(Collection $benchmarks, int $recordsInTable)
             writeln("\t- {$benchmark->name()}: ");
             $result = $benchmark->run();
             writeln("\t\tAvarage of {$result->getAverageInMilliSeconds()}ms over {$result->getIterations()} iterations.");
+
+            return true; // avoid breaking the loop
         })
     ;
 }
@@ -70,17 +72,21 @@ function write($msg)
     echo $msg;
 }
 
-$benchmarks = new ArrayCollection([
-    new NormalId($connection),
-    new BinaryUuid($connection),
-    new OptimisedUuid($connection),
-    new TextualUuid($connection),
-]);
+try {
+    $benchmarks = new ArrayCollection([
+        new NormalId($connection),
+        new BinaryUuid($connection),
+        new OptimisedUuid($connection),
+        new TextualUuid($connection),
+    ]);
 
-writeln('Starting benchmarks...');
-$iterations = determineIterations();
-foreach ($iterations as $iteration => $recordsInTable) {
-    writeln("\nStarting iteration {$iteration} with {$recordsInTable} records in table");
-    runIteration($benchmarks, $recordsInTable);
+    writeln('Starting benchmarks...');
+    $iterations = determineIterations();
+    foreach ($iterations as $iteration => $recordsInTable) {
+        writeln("\nStarting iteration {$iteration} with {$recordsInTable} records in table");
+        runIteration($benchmarks, $recordsInTable);
+    }
+    writeln("\nDone");
+} catch (\Throwable $e) {
+    var_dump($e);
 }
-writeln("\nDone");

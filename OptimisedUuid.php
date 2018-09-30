@@ -1,6 +1,7 @@
 <?php
 
 use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 
 class OptimisedUuid extends Benchmark
 {
@@ -24,8 +25,6 @@ SQL
 
     public function seedTable()
     {
-        $queries = [];
-
         for ($i = 0; $i < $this->recordsInTable; $i++) {
             $uuid = Uuid::uuid1();
 
@@ -33,18 +32,12 @@ SQL
 
             $text = $this->randomTexts[array_rand($this->randomTexts)];
 
-            $queries[] = <<<SQL
-INSERT INTO `optimised_uuid` (`uuid`, `text`) VALUES ('$encodedUuid', '$text');
-SQL;
+            $query = $this->connection->prepare('INSERT INTO `optimised_uuid` (`uuid`, `text`) VALUES (:uuid,:text)');
+            $query->bindValue('uuid', $encodedUuid, \PDO::PARAM_STR);
+            $query->bindValue('text', $i . ' ' . $text, \PDO::PARAM_STR);
 
-            if (count($queries) > $this->flushAmount) {
-                $this->connection->exec(implode('', $queries));
-                $queries = [];
-            }
-        }
+            $query->execute();
 
-        if (count($queries)) {
-            $this->connection->exec(implode('', $queries));
         }
     }
 
@@ -56,10 +49,10 @@ SQL;
         for ($i = 0; $i < $this->benchmarkRounds; $i++) {
             $uuid = $uuids[array_rand($uuids)]['uuid'];
 
-            $queries[] = <<<SQL
-SELECT * FROM `optimised_uuid` 
-WHERE `uuid` = '$uuid';
-SQL;
+            $query = $this->connection->prepare('SELECT * FROM `optimised_uuid` WHERE `uuid` = :uuid');
+            $query->bindParam('uuid', $uuid, \PDO::PARAM_STR);
+
+            $queries[] = $query;
         }
 
         return $this->runQueryBenchmark($queries);

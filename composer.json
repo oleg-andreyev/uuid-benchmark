@@ -2,9 +2,9 @@
     "require": {
         "ramsey/uuid": "^3.8",
         "fzaninotto/faker": "^1.8",
-        "doctrine/dbal": "^2.8",
-        "doctrine/collections": "^1.5",
-        "symfony/debug": "^4.1"
+        "doctrine/dbal": "^2.5",
+        "doctrine/collections": "^1.4",
+        "symfony/debug": "^3.4"
     },
     "autoload": {
         "files": [

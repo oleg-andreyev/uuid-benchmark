@@ -1,5 +1,7 @@
 <?php
 
+use Ramsey\Uuid\Uuid;
+
 class BinaryUuid extends Benchmark
 {
     public function name(): string
@@ -22,25 +24,16 @@ SQL
 
     public function seedTable()
     {
-        $queries = [];
-
         for ($i = 0; $i < $this->recordsInTable; $i++) {
             $uuid = str_replace('-', '', Uuid::uuid1()->toString());
 
             $text = $this->randomTexts[array_rand($this->randomTexts)];
 
-            $queries[] = <<<SQL
-INSERT INTO `binary_uuid` (`uuid`, `text`) VALUES (UNHEX('$uuid'), "$i $text");
-SQL;
+            $query = $this->connection->prepare('INSERT INTO `binary_uuid` (`uuid`, `text`) VALUES (:uuid, :text)');
+            $query->bindValue('uuid', $uuid, \PDO::PARAM_STR);
+            $query->bindValue('text', $i . ' ' . $text, \PDO::PARAM_STR);
 
-            if (count($queries) > $this->flushAmount) {
-                $this->connection->exec(implode('', $queries));
-                $queries = [];
-            }
-        }
-
-        if (count($queries)) {
-            $this->connection->exec(implode('', $queries));
+            $query->execute();
         }
     }
 
@@ -52,7 +45,10 @@ SQL;
         for ($i = 0; $i < $this->benchmarkRounds; $i++) {
             $uuid = $uuids[array_rand($uuids)]['uuid'];
 
-            $queries[] = 'SELECT * FROM `binary_uuid` WHERE `uuid` = "$uuid";';
+            $query = $this->connection->prepare('SELECT * FROM `binary_uuid` WHERE `uuid` = :uuid');
+            $query->bindParam('uuid', $uuid, \PDO::PARAM_STR);
+
+            $queries[] = $query;
         }
 
         return $this->runQueryBenchmark($queries);

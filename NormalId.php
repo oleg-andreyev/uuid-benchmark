@@ -22,29 +22,18 @@ SQL
 
     public function seedTable()
     {
-        $queries = [];
-
-        // LOAD DATA INFILE '/var/lib/mysql-files/products.csv' INTO TABLE products;
         for ($i = 0; $i < $this->recordsInTable; $i++) {
             $text = $this->randomTexts[array_rand($this->randomTexts)];
 
-            $queries[] = <<<SQL
-INSERT INTO `normal_id` (`text`) VALUES ('$text');
-SQL;
 
-            if (count($queries) > $this->flushAmount) {
-                $this->connection->exec(implode('', $queries));
-                write("\r$i of $this->recordsInTable");
-                $queries = [];
-            }
+            $query = $this->connection->prepare('INSERT INTO `normal_id` (`text`) VALUES (:text)');
+            $query->bindValue('text', $i . ' ' . $text, \PDO::PARAM_STR);
+
+            $query->execute();
         }
 
-        if (count($queries)) {
-            $this->connection->exec(implode('', $queries));
-        }
 
         write("\r$i of $this->recordsInTable");
-
         writeln("");
     }
 
@@ -56,7 +45,10 @@ SQL;
         for ($i = 0; $i < $this->benchmarkRounds; $i++) {
             $id = $ids[array_rand($ids)]['id'];
 
-            $queries[] = "SELECT * FROM `normal_id` WHERE `id` = {$id};";
+            $query = $this->connection->prepare('SELECT * FROM `normal_id` WHERE `id` = :id');
+            $query->bindParam('id', $id);
+
+            $queries[] = $query;
         }
 
         return $this->runQueryBenchmark($queries);

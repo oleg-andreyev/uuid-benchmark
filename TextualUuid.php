@@ -31,18 +31,11 @@ SQL
 
             $text = $this->randomTexts[array_rand($this->randomTexts)];
 
-            $queries[] = <<<SQL
-INSERT INTO `textual_uuid` (`uuid`, `text`) VALUES ('$uuid', '$text');
-SQL;
+            $query = $this->connection->prepare('INSERT INTO `textual_uuid` (`uuid`, `text`) VALUES (:uuid,:text)');
+            $query->bindValue('uuid', $uuid, \PDO::PARAM_STR);
+            $query->bindValue('text', $i . ' ' . $text, \PDO::PARAM_STR);
 
-            if (count($queries) > $this->flushAmount) {
-                $this->connection->exec(implode('', $queries));
-                $queries = [];
-            }
-        }
-
-        if (count($queries)) {
-            $this->connection->exec(implode('', $queries));
+            $query->execute();
         }
     }
 
@@ -54,7 +47,10 @@ SQL;
         for ($i = 0; $i < $this->benchmarkRounds; $i++) {
             $uuid = $uuids[array_rand($uuids)]['uuid'];
 
-            $queries[] = "SELECT * FROM `textual_uuid` WHERE `uuid` = '$uuid';";
+            $query = $this->connection->prepare('SELECT * FROM `textual_uuid` WHERE `uuid` = :uuid');
+            $query->bindParam('uuid', $uuid, \PDO::PARAM_STR);
+
+            $queries[] = $query;
         }
 
         return $this->runQueryBenchmark($queries);
